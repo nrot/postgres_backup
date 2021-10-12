@@ -1,4 +1,4 @@
-use std::io::{Error, ErrorKind, Write};
+use std::io::{Error, Write};
 use std::net::{TcpStream, Shutdown};
 use std::result::Result;
 use std::time::Duration;

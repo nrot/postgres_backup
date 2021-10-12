@@ -34,7 +34,7 @@ pub mod wal {
     pub fn wal_copy(argv: ArgMatches) -> Result<(), Error> {
         let timestamp = prelude::Local::now();
 
-        let subcommand = argv.subcommand_matches("COMMAND").unwrap();
+        let subcommand = argv.subcommand_matches("wal").unwrap();
 
         let host = String::from(argv.value_of("ehost").expect("Host is required"));
         let password = String::from(argv.value_of("password").expect("Password is required"));
@@ -49,7 +49,7 @@ pub mod wal {
         let shost = String::from(argv.value_of("shost").unwrap_or(&""));
         let zip = argv.is_present("zip");
         dbg!(format!(
-            "\nZip compress: {zip}",
+            "Zip compress: {zip}",
             zip = argv.is_present("zip")
         ));
 
@@ -77,10 +77,13 @@ pub mod wal {
         }
 
         let dst_path = Path::new(&dst);
+        crate::dbgs!("Source file: {s}", s=src.clone());
+        crate::dbgs!("Destination folder: {s}", s=dst_path.to_str().unwrap().clone());
         if !(dst_path.exists() && dst_path.is_dir()){
             msg.error = format!("Destination dir does not exists: {path}", path = dst);
         } else {
             let dst_file = dst_path.join(Path::new(&filename));
+            crate::dbgs!("Destination file: {s}", s=dst_file.to_str().unwrap().clone());
             if dst_file.exists() {
                 msg.error = format!(
                     "Can`t rewrite path: {path}",

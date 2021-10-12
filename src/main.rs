@@ -20,18 +20,18 @@ fn main() -> Result<(), Error> {
 
     dbgs!("Debugging enabled");
 
-    let command = env::args().nth(1);
-    dbgs!("Command {cmd}", cmd=command.clone().unwrap().as_str());
+    // let command = env::args().nth(1);
+    // dbgs!("Command {cmd}", cmd=command.clone().unwrap().as_str());
 
     let mathces = clap_app!(postgres_backup=>
         (version: "1.0")
         (author: "nrot <nrot13@gmail.com>")
-        (@subcommand COMMAND => 
+        (@subcommand wal => 
             (@arg source: +required --source [FILE] "Путь до оригинального файла")
             (@arg filename: --filename [NAME] "Имя оригинального файла")
             (@arg dst_dir: --dst +required [PATH] "Путь до папки куда сохранять файл")
         )
-        (@arg COMMAND: +required "Команда")
+        //(@arg COMMAND: +required "Команда")
         (@arg ehost: +required --elk [HOST] "host:port Хост и порт до logstash tcp сервера")
         (@arg password: +required --password [PASSWORD] "Пароль для отправки логов")
         (@arg index_name: --index [NAME] "Имя индекса для ELK")
