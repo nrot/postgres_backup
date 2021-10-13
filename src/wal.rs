@@ -1,35 +1,13 @@
 pub mod wal {
-    use crate::api;
+    use crate::{api, message};
     use chrono::prelude;
     use clap::ArgMatches;
-    use serde::{Deserialize, Serialize};
     use serde_json;
     use std::fs::{self, File};
     use std::io::prelude::Read;
     use std::io::{Error, ErrorKind, Write};
     use std::path::Path;
     use std::result::Result;
-
-    #[derive(Serialize, Deserialize)]
-    struct Message {
-        source: String,
-        filename: String,
-        dst: String,
-        error: String,
-        orig_size: u64,
-        back_size: u64,
-        time_spent: f64,
-    }
-
-    #[derive(Serialize, Deserialize)]
-    struct Record {
-        timestamp: String,
-        index_name: String,
-        version: String,
-        password: String,
-        host: String,
-        message: Option<Message>,
-    }
 
     pub fn wal_copy(argv: ArgMatches) -> Result<(), Error> {
         let timestamp = prelude::Local::now();
@@ -45,7 +23,7 @@ pub mod wal {
         let zip = argv.is_present("zip");
         crate::dbgs!("Zip compress: {zip}", zip = argv.is_present("zip"));
 
-        let mut msg = Message {
+        let mut msg = message::Message {
             source: src.clone(),
             filename: filename.clone(),
             dst: dst.clone(),
@@ -54,7 +32,7 @@ pub mod wal {
             back_size: 0,
             time_spent: 0.0,
         };
-        let mut record = Record {
+        let mut record = message::Record {
             timestamp: timestamp.format("%Y-%m-%dT%H:%M:%S.%3fZ").to_string(),
             password: password,
             index_name: indx,
@@ -99,15 +77,16 @@ pub mod wal {
                                     Ok(back) => {
                                         let mut zip = zip::ZipWriter::new(&back);
                                         let options = zip::write::FileOptions::default()
-                                            .compression_method(zip::CompressionMethod::Stored);
+                                            .compression_method(zip::CompressionMethod::Bzip2);
                                         match zip.start_file(filename.as_str(), options) {
                                             Ok(_) => {
                                                 let mut buff = Vec::new();
                                                 src_f.read_to_end(&mut buff)?;
-                                                let writed = zip.write(&buff);
+                                                crate::dbgs!("Read bytes: {s}", s=buff.len());
+                                                let writed = zip.write_all(&buff);
                                                 match writed {
-                                                    Ok(size) => {
-                                                        msg.orig_size = size as u64;
+                                                    Ok(_) => {
+                                                        msg.orig_size = buff.len() as u64;
                                                     }
                                                     Err(e) => {
                                                         msg.error =

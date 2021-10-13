@@ -2,6 +2,8 @@ use std::io::{Error, ErrorKind};
 use std::result::Result;
 mod api;
 mod wal;
+mod full;
+mod message;
 
 use clap::clap_app;
 
@@ -27,8 +29,9 @@ fn main() -> Result<(), Error> {
     let mathces = clap_app!(postgres_backup=>
         (version: "1.0")
         (author: "nrot <nrot13@gmail.com>")
-        (@arg COMMAND: +required [NAME] "Имя команды")
-        (@arg source: +required --source [FILE] "Путь до оригинального файла")
+        (about: "")
+        (@arg COMMAND: +required [NAME] "Имя команды. wal/full")
+        (@arg source: --source [FILE] "Путь до оригинального файла/пути")
         (@arg filename: --filename [NAME] "Имя оригинального файла")
         (@arg dst_dir: --dst +required [PATH] "Путь до папки куда сохранять файл")
         (@arg ehost: +required --elk [HOST] "host:port Хост и порт до logstash tcp сервера")
@@ -36,6 +39,7 @@ fn main() -> Result<(), Error> {
         (@arg index_name: --index [NAME] "Имя индекса для ELK")
         (@arg shost: --host [NAME] "Имя хоста от куда придет сообщение")
         (@arg zip: --zip "Сжимать ли бэкап. По умолчанию false")
+        (@arg dbname: -d --dbname "Только для full Строка подключения заключенная в \"")
     )
     .get_matches();
 
@@ -43,7 +47,10 @@ fn main() -> Result<(), Error> {
         Some(s) => match s.to_lowercase().trim() {
             "wal" => {
                 return wal::wal::wal_copy(mathces);
-            }
+            },
+            "full"=>{
+                return full::full::full_copy(mathces);
+            },
             c => {
                 dbgs!("Main command: {s}", s=c);
                 print_main_help();
